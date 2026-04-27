@@ -6,8 +6,27 @@
         ← Back
       </button>
 
-      <div v-if="loading" class="text-center py-16 text-gray-400">Loading…</div>
-      <div v-else-if="error" class="text-center py-16 text-red-500">{{ error }}</div>
+      <!-- Skeleton while loading -->
+      <div v-if="loading" class="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
+        <div class="h-24 bg-gradient-to-r from-brand-100 to-brand-200" />
+        <div class="divide-y divide-gray-100">
+          <div v-for="i in 4" :key="i" class="px-6 py-4 flex items-center gap-4">
+            <div class="w-32 h-4 bg-gray-100 rounded flex-shrink-0" />
+            <div class="h-4 bg-gray-100 rounded flex-1 max-w-xs" />
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="error" class="text-center py-16">
+        <div class="flex flex-col items-center gap-3 text-red-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-sm">{{ error }}</p>
+          <button @click="load" class="text-sm text-brand-600 hover:underline">Try again</button>
+        </div>
+      </div>
       <div v-else-if="profile" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="bg-gradient-to-r from-brand-500 to-brand-700 px-6 py-5 text-white">
           <h1 class="text-2xl font-bold capitalize">{{ profile.name }}</h1>
@@ -34,13 +53,31 @@
         </div>
 
         <div v-if="isAdmin" class="px-6 py-4 border-t border-gray-100">
-          <button
-            @click="handleDelete"
-            class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
-            :disabled="deleting"
-          >
-            {{ deleting ? 'Deleting…' : 'Delete profile' }}
-          </button>
+          <div v-if="!confirmingDelete">
+            <button
+              @click="confirmingDelete = true"
+              class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+            >
+              Delete profile
+            </button>
+          </div>
+          <div v-else class="flex items-center gap-3">
+            <span class="text-sm text-gray-600">Are you sure? This can't be undone.</span>
+            <button
+              @click="handleDelete"
+              :disabled="deleting"
+              class="text-sm font-medium text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md transition-colors disabled:opacity-60"
+            >
+              {{ deleting ? 'Deleting…' : 'Yes, delete' }}
+            </button>
+            <button
+              @click="confirmingDelete = false"
+              :disabled="deleting"
+              class="text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -72,6 +109,7 @@ const profile = ref(null)
 const loading = ref(true)
 const error   = ref(null)
 const deleting = ref(false)
+const confirmingDelete = ref(false)
 
 const isAdmin = computed(() => auth.user?.role === 'admin')
 const pct = (v) => `${Math.round((v ?? 0) * 100)}%`
@@ -91,7 +129,6 @@ async function load() {
 }
 
 async function handleDelete() {
-  if (!confirm('Delete this profile permanently?')) return
   deleting.value = true
   try {
     const resp = await del(`/api/profiles/${route.params.id}`)

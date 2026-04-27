@@ -38,7 +38,11 @@
           <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Recent Profiles</h2>
           <router-link to="/profiles" class="text-sm text-brand-600 hover:underline">View all →</router-link>
         </div>
-        <ProfilesTable :profiles="recent" @select="id => $router.push(`/profiles/${id}`)" />
+        <div v-if="loading" class="animate-pulse space-y-2">
+          <div class="h-9 bg-gray-100 rounded w-full" />
+          <div v-for="i in 5" :key="i" class="h-12 bg-gray-50 rounded w-full" />
+        </div>
+        <ProfilesTable v-else :profiles="recent" @select="id => $router.push(`/profiles/${id}`)" />
       </div>
     </main>
   </div>
