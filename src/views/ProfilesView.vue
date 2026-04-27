@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Profiles</h1>
         <a
-          :href="`${apiUrl}/api/profiles/export?format=csv`"
+          :href="`${apiUrl}/api/profiles/export?format=csv&api_version=1`"
           class="text-sm px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
         >
           Export CSV
