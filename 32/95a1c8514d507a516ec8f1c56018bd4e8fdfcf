@@ -1,0 +1,23 @@
+src/views/ProfilesView.vue
+  d2b3512aa6e99508 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "3295a1c8514d507a516ec8f1c56018bd4e8fdfcf",
+  "prompts": {
+    "d2b3512aa6e99508": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "41b53a1a-d83e-4ccc-8e1f-d9673e45aa41",
+        "model": "<synthetic>"
+      },
+      "human_author": "Precious Okolaa",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
