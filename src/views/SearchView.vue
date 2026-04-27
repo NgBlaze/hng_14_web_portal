@@ -4,7 +4,7 @@
     <main class="max-w-4xl mx-auto px-6 py-8">
       <h1 class="text-2xl font-bold text-gray-900 mb-6">Natural Language Search</h1>
 
-      <form @submit.prevent="doSearch" class="flex gap-3 mb-6">
+      <form @submit.prevent="doSearch(true)" class="flex gap-3 mb-6">
         <input
           v-model="query"
           class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -60,8 +60,9 @@ const page      = ref(1)
 const total     = ref(0)
 const totalPages = ref(1)
 
-async function doSearch() {
+async function doSearch(resetPage = false) {
   if (!query.value.trim()) return
+  if (resetPage) page.value = 1
   loading.value = true
   errorMsg.value = null
   lastQuery.value = query.value

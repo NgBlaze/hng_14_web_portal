@@ -9,7 +9,7 @@
         <StatCard label="Total Profiles" :value="stats.total" :loading="loading" />
         <StatCard label="Male" :value="stats.male" :loading="loading" />
         <StatCard label="Female" :value="stats.female" :loading="loading" />
-        <StatCard label="Countries" :value="stats.countries" :loading="loading" />
+        <StatCard label="Adults" :value="stats.adults" :loading="loading" />
       </div>
 
       <!-- Age group breakdown -->
@@ -82,15 +82,9 @@ async function load() {
     ])
 
     const total = allData?.total ?? 0
-    stats.value = {
-      total,
-      male: maleData?.total ?? 0,
-      female: femaleData?.total ?? 0,
-      countries: '—',
-    }
     recent.value = recentData?.data ?? []
 
-    // Age groups
+    // Age groups — fetched in the same batch, reused for the Adults stat card
     const groups = ['child', 'teenager', 'adult', 'senior']
     const groupData = await Promise.all(
       groups.map(g => get('/api/profiles', { params: { limit: 1, age_group: g } }).then(r => r?.json()))
@@ -100,6 +94,14 @@ async function load() {
       count: groupData[i]?.total ?? 0,
       pct: total ? Math.round(((groupData[i]?.total ?? 0) / total) * 100) : 0,
     }))
+
+    const adultCount = groupData[groups.indexOf('adult')]?.total ?? 0
+    stats.value = {
+      total,
+      male: maleData?.total ?? 0,
+      female: femaleData?.total ?? 0,
+      adults: adultCount,
+    }
   } finally {
     loading.value = false
   }

@@ -93,9 +93,19 @@ async function load() {
 async function handleDelete() {
   if (!confirm('Delete this profile permanently?')) return
   deleting.value = true
-  const resp = await del(`/api/profiles/${route.params.id}`)
-  if (resp?.status === 204) router.push('/profiles')
-  else deleting.value = false
+  try {
+    const resp = await del(`/api/profiles/${route.params.id}`)
+    if (resp?.status === 204) {
+      router.push('/profiles')
+    } else {
+      const data = resp ? await resp.json().catch(() => ({})) : {}
+      error.value = data.message || 'Failed to delete profile.'
+      deleting.value = false
+    }
+  } catch {
+    error.value = 'Failed to delete profile.'
+    deleting.value = false
+  }
 }
 
 onMounted(load)

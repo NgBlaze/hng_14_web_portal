@@ -9,6 +9,7 @@ const routes = [
   { path: '/search',    component: () => import('../views/SearchView.vue'),         meta: { requiresAuth: true } },
   { path: '/account',   component: () => import('../views/AccountView.vue'),        meta: { requiresAuth: true } },
   { path: '/',          redirect: '/dashboard' },
+  { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
 ]
 
 const router = createRouter({
