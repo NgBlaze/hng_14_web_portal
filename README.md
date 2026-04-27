@@ -8,24 +8,37 @@ Browser-based interface for the Insighta Labs+ profile intelligence platform. Bu
 
 ## System Architecture
 
+```mermaid
+graph TD
+    subgraph SPA["Vue 3 SPA"]
+        R[router/\nauth guard]
+        S[stores/auth.js\nPinia user state]
+        C[api/client.js\nCSRF · auto-refresh]
+        V[views/\nLogin · Dashboard · Profiles\nDetail · Search · Account]
+        K[components/\nNavBar · ProfilesTable · Pagination]
+    end
+
+    R --> S
+    V --> C
+    K --> S
+
+    SPA -->|"HTTPS · HttpOnly cookies\nX-API-Version: 1\nX-CSRF-Token"| BACKEND["Backend API\nhng-14-stage-1.vercel.app"]
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    Vue 3 SPA                             │
-│                                                          │
-│  router/         ← Vue Router with auth guard            │
-│  stores/auth.js  ← Pinia store (user state)             │
-│  api/client.js   ← fetch wrapper (CSRF, auto-refresh)   │
-│  views/          ← LoginView, Dashboard, Profiles, …    │
-│  components/     ← NavBar, ProfilesTable, Pagination    │
-└───────────────────────────┬──────────────────────────────┘
-                            │ HTTPS + HttpOnly cookies
-                            │ X-API-Version: 1
-                            │ X-CSRF-Token (on mutations)
-                            ▼
-┌──────────────────────────────────────────────────────────┐
-│        Insighta Labs+ Backend API                        │
-│     https://hng-14-stage-1.vercel.app                   │
-└──────────────────────────────────────────────────────────┘
+
+### Page Navigation Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Login: unauthenticated
+    Login --> Dashboard: GitHub OAuth success
+    Dashboard --> Profiles: view all
+    Dashboard --> Search: natural language
+    Profiles --> ProfileDetail: click row
+    ProfileDetail --> Profiles: back
+    ProfileDetail --> Profiles: delete (admin only)
+    Dashboard --> Account: navbar
+    Account --> Login: sign out
+    Login --> Login: auth error
 ```
 
 ---
@@ -59,6 +72,27 @@ Tokens are stored in `HttpOnly` cookies — they are never accessible to JavaScr
 ### Session Check (route guard)
 
 On every navigation the Vue Router guard calls `GET /auth/whoami` once (cached in Pinia via `auth.checked`). Unauthenticated users are redirected to `/login`.
+
+```mermaid
+sequenceDiagram
+    participant U as Browser
+    participant VR as Vue Router
+    participant PS as Pinia Store
+    participant API as Backend API
+
+    U->>VR: navigate to /dashboard
+    VR->>PS: auth.checked?
+    alt first visit
+        PS->>API: GET /auth/whoami (cookie sent automatically)
+        API-->>PS: user data
+        PS->>PS: auth.user = user, checked = true
+    end
+    alt authenticated
+        VR->>U: render /dashboard
+    else unauthenticated
+        VR->>U: redirect → /login
+    end
+```
 
 ### CSRF Protection
 
