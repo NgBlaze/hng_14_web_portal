@@ -61,7 +61,7 @@ import ProfilesTable from '../components/ProfilesTable.vue'
 import Pagination from '../components/Pagination.vue'
 import { get } from '../api/client'
 
-const apiUrl = import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app'
+const apiUrl = (import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app').replace(/\/$/, '')
 
 const profiles  = ref([])
 const loading   = ref(false)

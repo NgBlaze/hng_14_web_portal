@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app'
+const API_URL = (import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app').replace(/\/$/, '')
 
 function getCsrfToken() {
   const match = document.cookie.split('; ').find(r => r.startsWith('csrf_token='))

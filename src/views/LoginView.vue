@@ -36,7 +36,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const API_URL = import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app'
+const API_URL = (import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app').replace(/\/$/, '')
 
 const loginUrl = `${API_URL}/auth/github`
 
