@@ -10,7 +10,7 @@
             v-if="auth.user.avatar_url"
             :src="auth.user.avatar_url"
             class="w-14 h-14 rounded-full ring-2 ring-white"
-            alt="avatar"
+            :alt="`${auth.user.username} avatar`"
           />
           <div>
             <p class="text-white font-semibold text-lg">@{{ auth.user.username }}</p>

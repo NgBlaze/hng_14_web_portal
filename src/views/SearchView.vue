@@ -13,9 +13,13 @@
         <button
           type="submit"
           :disabled="loading || !query.trim()"
-          class="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-medium px-5 py-3 rounded-xl text-sm transition-colors"
+          class="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-medium px-5 py-3 rounded-xl text-sm transition-colors flex items-center gap-2"
         >
-          Search
+          <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>
+          {{ loading ? 'Searching…' : 'Search' }}
         </button>
       </form>
 
@@ -27,8 +31,25 @@
         <Pagination v-if="totalPages > 1" :page="page" :total-pages="totalPages" :total="total" @change="goTo" />
       </div>
 
-      <div v-if="loading" class="text-center py-12 text-gray-400">Searching…</div>
-      <div v-if="errorMsg" class="text-center py-12 text-red-500">{{ errorMsg }}</div>
+      <div v-if="loading" class="text-center py-12">
+        <div class="flex flex-col items-center gap-3 text-gray-400">
+          <svg class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>
+          <span class="text-sm">Searching…</span>
+        </div>
+      </div>
+      <div v-if="errorMsg" class="text-center py-12">
+        <div class="flex flex-col items-center gap-3 text-red-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-sm">{{ errorMsg }}</p>
+          <button @click="doSearch(true)" class="text-sm text-brand-600 hover:underline">Try again</button>
+        </div>
+      </div>
 
       <div v-if="!searched && !loading" class="mt-8 bg-brand-50 rounded-xl p-6 text-sm text-brand-700">
         <p class="font-semibold mb-2">Try queries like:</p>

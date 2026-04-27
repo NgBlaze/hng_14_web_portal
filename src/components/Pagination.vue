@@ -5,14 +5,18 @@
       <button
         :disabled="page <= 1"
         @click="$emit('change', page - 1)"
-        class="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+        class="px-3 py-1 rounded border border-gray-300 transition-colors"
+        :class="page <= 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer'"
+        aria-label="Previous page"
       >
         ← Prev
       </button>
       <button
         :disabled="page >= totalPages"
         @click="$emit('change', page + 1)"
-        class="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-100 transition-colors"
+        class="px-3 py-1 rounded border border-gray-300 transition-colors"
+        :class="page >= totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer'"
+        aria-label="Next page"
       >
         Next →
       </button>
