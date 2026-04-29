@@ -1,8 +1,40 @@
 const API_URL = (import.meta.env.VITE_API_URL || 'https://hng-14-stage-1.vercel.app').replace(/\/$/, '')
 
-function getCsrfToken() {
-  const match = document.cookie.split('; ').find(r => r.startsWith('csrf_token='))
-  return match ? match.split('=')[1] : null
+const CSRF_KEY = 'csrf_token'
+
+function readCachedCsrf() {
+  try { return sessionStorage.getItem(CSRF_KEY) } catch { return null }
+}
+
+function writeCachedCsrf(token) {
+  try {
+    if (token) sessionStorage.setItem(CSRF_KEY, token)
+    else sessionStorage.removeItem(CSRF_KEY)
+  } catch { /* ignore */ }
+}
+
+let _csrfFetching = null
+async function fetchCsrf() {
+  if (_csrfFetching) return _csrfFetching
+  _csrfFetching = fetch(`${API_URL}/auth/csrf`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'X-API-Version': '1' },
+  })
+    .then(async r => {
+      if (!r.ok) return null
+      const data = await r.json().catch(() => null)
+      const token = data && data.csrf_token
+      if (token) writeCachedCsrf(token)
+      return token
+    })
+    .catch(() => null)
+    .finally(() => { _csrfFetching = null })
+  return _csrfFetching
+}
+
+export function clearCsrf() {
+  writeCachedCsrf(null)
 }
 
 let _refreshing = null
@@ -12,10 +44,15 @@ async function _tryRefresh() {
   _refreshing = fetch(`${API_URL}/auth/refresh`, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-API-Version': '1' },
     body: JSON.stringify({}),
   })
-    .then(r => r.ok)
+    .then(async r => {
+      if (!r.ok) return false
+      const data = await r.json().catch(() => null)
+      if (data && data.csrf_token) writeCachedCsrf(data.csrf_token)
+      return true
+    })
     .catch(() => false)
     .finally(() => { _refreshing = null })
   return _refreshing
@@ -34,28 +71,41 @@ export async function apiFetch(method, path, { body, params } = {}) {
 
   const mutating = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())
   if (mutating) {
-    const csrf = getCsrfToken()
+    let csrf = readCachedCsrf()
+    if (!csrf) csrf = await fetchCsrf()
     if (csrf) headers['X-CSRF-Token'] = csrf
   }
 
-  let resp = await fetch(url.toString(), {
+  const doFetch = (extraHeaders = {}) => fetch(url.toString(), {
     method,
-    headers,
+    headers: { ...headers, ...extraHeaders },
     credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 
+  let resp = await doFetch()
+
+  // CSRF mismatch (stale cached token) — refetch once and retry.
+  if (mutating && resp.status === 403) {
+    const cloned = resp.clone()
+    const data = await cloned.json().catch(() => null)
+    const msg = data && (data.message || (data.detail && data.detail.message))
+    if (msg && /csrf/i.test(msg)) {
+      writeCachedCsrf(null)
+      const fresh = await fetchCsrf()
+      if (fresh) resp = await doFetch({ 'X-CSRF-Token': fresh })
+    }
+  }
+
   if (resp.status === 401) {
     const ok = await _tryRefresh()
     if (ok) {
-      resp = await fetch(url.toString(), {
-        method,
-        headers,
-        credentials: 'include',
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      })
+      const csrf = readCachedCsrf()
+      const retryHeaders = mutating && csrf ? { 'X-CSRF-Token': csrf } : {}
+      resp = await doFetch(retryHeaders)
     }
     if (resp.status === 401) {
+      writeCachedCsrf(null)
       window.location.href = '/login?error=session_expired'
       return null
     }
